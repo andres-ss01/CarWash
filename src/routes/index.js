@@ -1,0 +1,30 @@
+// =============================================================================
+// src/routes/index.js - Agrupa todas las rutas bajo el prefijo /api
+// =============================================================================
+
+import { Router } from "express";
+import authRoutes from "./authRoutes.js";
+import usuarioRoutes from "./usuarioRoutes.js";
+import tipoVehiculoRoutes from "./tipoVehiculoRoutes.js";
+import vehiculoRoutes from "./vehiculoRoutes.js";
+import servicioRoutes from "./servicioRoutes.js";
+import horarioRoutes from "./horarioRoutes.js";
+import citaRoutes from "./citaRoutes.js";
+import ordenRoutes from "./ordenRoutes.js";
+import pagoRoutes from "./pagoRoutes.js";
+import notificacionRoutes from "./notificacionRoutes.js";
+
+const router = Router();
+
+router.use("/auth", authRoutes);                   // -> /api/auth
+router.use("/usuarios", usuarioRoutes);            // -> /api/usuarios
+router.use("/tipos-vehiculo", tipoVehiculoRoutes); // -> /api/tipos-vehiculo
+router.use("/vehiculos", vehiculoRoutes);          // -> /api/vehiculos
+router.use("/servicios", servicioRoutes);          // -> /api/servicios
+router.use("/horarios", horarioRoutes);            // -> /api/horarios
+router.use("/citas", citaRoutes);                  // -> /api/citas
+router.use("/ordenes", ordenRoutes);               // -> /api/ordenes
+router.use("/pagos", pagoRoutes);                  // -> /api/pagos
+router.use("/notificaciones", notificacionRoutes); // -> /api/notificaciones
+
+export default router;
