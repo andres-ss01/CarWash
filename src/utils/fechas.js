@@ -57,3 +57,15 @@ export function ahoraLocal() {
   const v = Object.fromEntries(parts.map((p) => [p.type, p.value]));
   return new Date(Date.UTC(+v.year, +v.month - 1, +v.day, +v.hour, +v.minute, +v.second));
 }
+
+// "2026-11-27" -> "viernes 27 de noviembre" (para mensajes al personal)
+export function fechaLegible(fecha) {
+  const d = typeof fecha === "string" ? parseFechaHora(fecha) : fecha;
+  return new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(d);
+}
+
+// Suma `n` días a una fecha "YYYY-MM-DD" y devuelve "YYYY-MM-DD"
+export const sumarDias = (fecha, n) => formatFecha(addMinutes(parseFechaHora(fecha), n * 1440));
+
+// Fecha de hoy en la hora del negocio, "YYYY-MM-DD"
+export const hoyLocal = () => formatFecha(ahoraLocal());

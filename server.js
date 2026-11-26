@@ -1,8 +1,7 @@
 // =============================================================================
 // server.js - Arranque LOCAL (npm start / npm run dev) y hosts con proceso fijo
 // -----------------------------------------------------------------------------
-// En Vercel NO se usa este archivo: ahí la entrada es api/index.js.
-// =============================================================================
+
 
 import app, { validarConfig, ensureDatabase } from "./src/app.js";
 

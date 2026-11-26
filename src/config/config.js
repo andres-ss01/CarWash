@@ -22,4 +22,48 @@ export const config = {
   get slotMin() {
     return Number(process.env.SLOT_MIN) || 30;
   },
+
+  // ---- Fase 11: clima, demanda y sugerencias ----
+  // Ubicación del negocio para el pronóstico (Open-Meteo). Por defecto, Ciudad de México.
+  get latitud() {
+    return Number(process.env.NEGOCIO_LAT) || 19.4326;
+  },
+  get longitud() {
+    return Number(process.env.NEGOCIO_LON) || -99.1332;
+  },
+  // Ventanas de cada turno en horas locales: [inicio, fin)
+  get ventanasTurno() {
+    return {
+      matutino: [Number(process.env.TURNO_MATUTINO_INICIO) || 8, Number(process.env.TURNO_MATUTINO_FIN) || 14],
+      vespertino: [Number(process.env.TURNO_VESPERTINO_INICIO) || 14, Number(process.env.TURNO_VESPERTINO_FIN) || 20],
+    };
+  },
+  // Cuántos lavados atiende un lavador en un turno
+  get lavadosPorLavador() {
+    return Number(process.env.LAVADOS_POR_LAVADOR) || 5;
+  },
+  // Mínimo de lavadores por turno (nunca se sugiere descansar por debajo de esto)
+  get minLavadoresTurno() {
+    return Number(process.env.MIN_LAVADORES_TURNO) || 2;
+  },
+  // Lavados por turno que se asumen mientras no haya historial suficiente
+  get demandaBaseTurno() {
+    return Number(process.env.DEMANDA_BASE_TURNO) || 6;
+  },
+  // Semanas de historial que se promedian para estimar la demanda
+  get semanasHistorial() {
+    return Number(process.env.SEMANAS_HISTORIAL) || 8;
+  },
+  // Probabilidad de lluvia (%) desde la cual se sugiere descansar
+  get umbralLluvia() {
+    return Number(process.env.UMBRAL_LLUVIA) || 60;
+  },
+  // "activo" genera sugerencias; "sombra" solo guarda predicciones (para validarlas antes de molestar al personal)
+  get modoSugerencias() {
+    return String(process.env.SUGERENCIAS_MODO || "activo").toLowerCase() === "sombra" ? "sombra" : "activo";
+  },
+  // Secreto del cron de Vercel (Vercel lo envía como "Authorization: Bearer <CRON_SECRET>")
+  get cronSecret() {
+    return process.env.CRON_SECRET;
+  },
 };

@@ -55,6 +55,9 @@ export function createApp() {
         ordenes: "/api/ordenes",
         pagos: "/api/pagos",
         notificaciones: "/api/notificaciones",
+        cronograma: "/api/cronograma",
+        sugerencias: "/api/sugerencias",
+        panel: "/api/panel",
       },
     });
   });
