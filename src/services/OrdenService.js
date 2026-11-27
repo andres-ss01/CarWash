@@ -46,12 +46,31 @@ export default class OrdenService {
   }
 
   // Lo que consume la barra de progreso de la app del cliente
+  // Se arma con la misma consulta de la orden (ya trae estado, paso, total de pasos, vehículo y fechas)
+  // en lugar de la vista vista_seguimiento_orden: si la vista faltaba o estaba rota en la base,
+  // el seguimiento respondía 500 aunque la orden existiera.
   async getSeguimiento(actor, id) {
     const orden = await this.getById(actor, id); // valida existencia y permisos
-    const seguimiento = await this.model.findSeguimiento(orden.id);
-    const historial = await this.model.findHistorial(orden.id);
-    const estados = await this.model.findEstados();
-    return { ...seguimiento, estados, historial };
+    const [historial, estados] = await Promise.all([
+      this.model.findHistorial(orden.id),
+      this.model.findEstados(),
+    ]);
+    const pasoActual = Number(orden.estado.paso) || 1;
+    const totalPasos = Number(orden.estado.totalPasos) || estados.length || 1;
+    return {
+      idOrden: orden.id,
+      idCliente: orden.cliente.id,
+      vehiculo: { matricula: orden.vehiculo.matricula, descripcion: orden.vehiculo.descripcion },
+      estadoActual: orden.estado.nombre,
+      pasoActual,
+      totalPasos,
+      progreso: Math.round((pasoActual / totalPasos) * 100),
+      fechaInicio: orden.fechaInicio,
+      fechaTermino: orden.fechaTermino,
+      entregaEstimada: orden.entregaEstimada,
+      estados,
+      historial,
+    };
   }
 
   // POST /api/ordenes  { idCita }  (staff): el vehículo llegó
