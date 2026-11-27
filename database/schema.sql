@@ -5,7 +5,7 @@
 -- =====================================================================
 SET FOREIGN_KEY_CHECKS = 0;
 DROP VIEW  IF EXISTS vista_seguimiento_orden;
-DROP TABLE IF EXISTS Sugerencia, PrediccionDemanda, ClimaDia, ExcepcionDia, CronogramaTrabajador,
+DROP TABLE IF EXISTS ModeloDemanda, Sugerencia, PrediccionDemanda, ClimaPronostico, ClimaDia, ExcepcionDia, CronogramaTrabajador,
                      Notificacion, Pago, OrdenTrabajador, HistorialEstadoOrden, Orden,
                      EstadoOrden, CitaServicio, Cita, HorarioAtencion, ServicioPrecio,
                      Servicio, Vehiculo, TipoVehiculo, Trabajador, Administrador,
@@ -367,6 +367,23 @@ CREATE TABLE PrediccionDemanda (
   PRIMARY KEY (fecha, turno)
 ) ENGINE=InnoDB;
 
+-- Foto del pronóstico por día consultado (también en migrations/003_clima_pronostico.sql).
+-- ClimaDia se sobrescribe con lo observado; el modelo debe entrenarse con lo que se pronosticaba.
+CREATE TABLE ClimaPronostico (
+  fecha            DATE NOT NULL,                   -- día pronosticado
+  emitido          DATE NOT NULL,                   -- día en que se consultó
+  dias_antes       TINYINT NOT NULL,                -- fecha - emitido (1 = la víspera)
+  prob_lluvia      TINYINT NULL,
+  prob_lluvia_mat  TINYINT NULL,
+  prob_lluvia_vesp TINYINT NULL,
+  precipitacion_mm DECIMAL(5,1) NULL,
+  temp_max         DECIMAL(4,1) NULL,
+  viento_max       DECIMAL(4,1) NULL,
+  actualizado      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (fecha, emitido),
+  KEY idx_pronostico_dias (dias_antes, fecha)
+) ENGINE=InnoDB;
+
 -- Sugerencias para el trabajador: descansar (poca demanda) o trabajar (refuerzo voluntario)
 CREATE TABLE Sugerencia (
   idSugerencia    INT NOT NULL AUTO_INCREMENT,
@@ -382,4 +399,21 @@ CREATE TABLE Sugerencia (
   KEY idx_sugerencia_fecha (fecha, estado),
   CONSTRAINT fk_sug_trabajador FOREIGN KEY (idTrabajador)
     REFERENCES Trabajador (idUsuario) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+-- Modelos de machine learning de la demanda (Fase 13; también en migrations/004_modelo_demanda.sql)
+CREATE TABLE ModeloDemanda (
+  idModelo    INT NOT NULL AUTO_INCREMENT,
+  version     VARCHAR(30) NOT NULL,
+  entrenado   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  muestras    INT NOT NULL,
+  desde       DATE NULL,
+  hasta       DATE NULL,
+  mae_modelo  DECIMAL(7,3) NULL,
+  mae_reglas  DECIMAL(7,3) NULL,
+  activo      TINYINT(1) NOT NULL DEFAULT 0,
+  motivo      VARCHAR(200) NULL,
+  parametros  JSON NOT NULL,
+  PRIMARY KEY (idModelo),
+  KEY idx_modelo_activo (activo, entrenado)
 ) ENGINE=InnoDB;

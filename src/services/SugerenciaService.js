@@ -23,7 +23,10 @@ import AppError from "../utils/AppError.js";
 import { ROLES, esAdmin } from "../utils/permisos.js";
 import { parseId, requireEnum } from "../utils/validators.js";
 import { normalizarFecha } from "./CronogramaService.js";
-import { parseFechaHora, diaSemana, hoyLocal, sumarDias, fechaLegible } from "../utils/fechas.js";
+import {
+  parseFechaHora, diaSemana, hoyLocal, sumarDias, fechaLegible, ahoraLocal, formatFechaHora,
+} from "../utils/fechas.js";
+import ModeloService from "./ModeloService.js";
 import {
   TURNOS, turnosQueCubre, estimarLavados, lavadoresNecesarios, elegirDescansos, elegirRefuerzos,
 } from "../utils/planificador.js";
@@ -39,6 +42,7 @@ export default class SugerenciaService {
     this.usuarioModel = new Usuario();
     this.notificacionModel = new Notificacion();
     this.climaService = new ClimaService();
+    this.modeloService = new ModeloService();
   }
 
   async avisarAdmins(mensaje, conn = null) {
@@ -73,12 +77,26 @@ export default class SugerenciaService {
     const clima = await this.climaService.obtenerDia(fecha);
     const hoy = hoyLocal();
     const primeraCita = await this.demandaModel.primeraCita();
+    const modelo = await this.modeloService.obtenerActivo(); // Fase 13; null = reglas
+
+    // Lo agendado se mide como lo vería el cron: la víspera a las 18:00 (o ahora, si aún no llega esa hora)
+    const corteVispera = `${sumarDias(fecha, -1)} ${String(config.horaCorte).padStart(2, "0")}:00:00`;
+    const ahora = formatFechaHora(ahoraLocal());
+    const corte = ahora < corteVispera ? ahora : corteVispera;
 
     const turnos = {};
     for (const turno of TURNOS) {
       const probLluvia = clima.turnos[turno].probLluvia ?? clima.probLluvia;
       const { historico, semanas } = await this.historico(dia, turno, hoy, primeraCita);
-      const est = estimarLavados({ historico, semanas, demandaBase: config.demandaBaseTurno, probLluvia });
+      let contexto = null;
+      if (modelo) {
+        const [horaInicio, horaFin] = config.ventanasTurno[turno];
+        const agendadas = await this.demandaModel.agendadasAntes({ fecha, horaInicio, horaFin, corte });
+        contexto = { fecha, turno, precipitacionMm: clima.precipitacionMm, tempMax: clima.tempMax, agendadas };
+      }
+      const est = estimarLavados({
+        historico, semanas, demandaBase: config.demandaBaseTurno, probLluvia, modelo, contexto,
+      });
       const necesarios = lavadoresNecesarios(est.estimado, config.lavadosPorLavador, config.minLavadoresTurno);
       await this.demandaModel.upsertPrediccion({ fecha, turno, lavados: est.estimado, necesarios, metodo: est.metodo });
       turnos[turno] = { probLluvia, lavadosEstimados: est.estimado, necesarios, base: est.base, factor: est.factor, metodo: est.metodo, conHistorial: est.conHistorial };
@@ -184,6 +202,8 @@ export default class SugerenciaService {
     }
     if (estado === "rechazada") {
       await this.model.responder(s.id, "rechazada");
+      await this.avisarAdmins(
+        `${s.trabajador.nombre} rechazó ${s.tipo === "descansar" ? "descansar" : "trabajar"} el ${fechaLegible(s.fecha)}.`);
       return this.model.findById(s.id);
     }
 

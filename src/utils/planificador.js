@@ -6,6 +6,9 @@
 // por un modelo de machine learning sin tocar el resto.
 // =============================================================================
 
+// Fase 13: el modelo de ML (import circular seguro: solo se usan funciones declaradas)
+import { featuresCrudas, predecirModelo } from "./modeloDemanda.js";
+
 export const TURNOS = ["matutino", "vespertino"];
 
 // Un trabajador "mixto" cubre los dos turnos
@@ -25,9 +28,23 @@ const redondear1 = (n) => Math.round(n * 10) / 10;
 // Lavados esperados en un turno.
 //   historico: lavados observados en ese día de la semana y turno durante `semanas` semanas
 //   Con menos de 3 semanas de historial se usa `demandaBase` (arranque en frío).
-export function estimarLavados({ historico, semanas, demandaBase, probLluvia }) {
+//   Fase 13: si llega un `modelo` activo (y hay historial), predice el modelo de machine learning;
+//   `contexto` trae lo demás que necesita: { fecha, turno, precipitacionMm, tempMax, agendadas }.
+export function estimarLavados({ historico, semanas, demandaBase, probLluvia, modelo = null, contexto = null }) {
   const hayHistorial = semanas >= 3;
   const base = hayHistorial ? historico / semanas : demandaBase;
+
+  if (modelo && hayHistorial && contexto) {
+    const estimado = predecirModelo(modelo, featuresCrudas({ ...contexto, base, probLluvia }));
+    return {
+      estimado: redondear1(estimado),
+      base: redondear1(base),
+      factor: base > 0 ? Math.round((estimado / base) * 100) / 100 : null,
+      metodo: modelo.metodo || "modelo-v1",
+      conHistorial: true,
+    };
+  }
+
   const factor = factorLluvia(probLluvia);
   return {
     estimado: redondear1(base * factor),

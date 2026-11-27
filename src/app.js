@@ -58,6 +58,7 @@ export function createApp() {
         cronograma: "/api/cronograma",
         sugerencias: "/api/sugerencias",
         panel: "/api/panel",
+        modelo: "/api/modelo",
       },
     });
   });

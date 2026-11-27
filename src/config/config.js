@@ -62,6 +62,28 @@ export const config = {
   get modoSugerencias() {
     return String(process.env.SUGERENCIAS_MODO || "activo").toLowerCase() === "sombra" ? "sombra" : "activo";
   },
+  // ---- Fase 13: modelo de machine learning ----
+  // "off" obliga a usar las reglas aunque haya un modelo activo
+  get usarModelo() {
+    return String(process.env.MODELO_ML || "on").toLowerCase() !== "off";
+  },
+  // Turnos (fecha + turno) mínimos para activar el modelo (112 ≈ 8 semanas x 7 días x 2 turnos)
+  get minMuestrasModelo() {
+    return Number(process.env.MODELO_MIN_MUESTRAS) || 112;
+  },
+  // Regularización L2: más alta = modelo más conservador
+  get lambdaModelo() {
+    return Number(process.env.MODELO_LAMBDA) || 2;
+  },
+  // Días entre reentrenamientos automáticos (los hace el cron diario)
+  get diasReentrenar() {
+    return Number(process.env.MODELO_DIAS_REENTRENAR) || 7;
+  },
+  // Hora de la víspera en que se "congela" lo agendado (coincide con el cron de las 18:00)
+  get horaCorte() {
+    return Number(process.env.MODELO_HORA_CORTE) || 18;
+  },
+
   // Secreto del cron de Vercel (Vercel lo envía como "Authorization: Bearer <CRON_SECRET>")
   get cronSecret() {
     return process.env.CRON_SECRET;

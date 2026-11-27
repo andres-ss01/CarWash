@@ -24,6 +24,33 @@ export default class Demanda {
     return rows[0].n;
   }
 
+  // ---- Fase 13: datos para el modelo de machine learning ----
+
+  // Citas que ya estaban agendadas en `corte` ("YYYY-MM-DD HH:mm:ss") para esa fecha y franja horaria
+  async agendadasAntes({ fecha, horaInicio, horaFin, corte }) {
+    const rows = await database.query(
+      `SELECT COUNT(*) AS n FROM Cita
+        WHERE DATE(fecha_hora_inicio) = ? AND estado NOT IN ('cancelada', 'no_asistio')
+          AND HOUR(fecha_hora_inicio) >= ? AND HOUR(fecha_hora_inicio) < ?
+          AND fecha_creacion < ?`,
+      [fecha, horaInicio, horaFin, corte]);
+    return rows[0].n;
+  }
+
+  // Lavados por fecha y hora en [desde, hasta), en UNA consulta. `agendadas` = las que ya existían
+  // la víspera a las `horaCorte` (lo que el sistema sabía al predecir).
+  async conteosPorHora({ desde, hasta, horaCorte = 18 }) {
+    return database.query(
+      `SELECT DATE_FORMAT(fecha_hora_inicio, '%Y-%m-%d') AS fecha, HOUR(fecha_hora_inicio) AS hora,
+              COUNT(*) AS total,
+              SUM(fecha_creacion < DATE_ADD(DATE_SUB(DATE(fecha_hora_inicio), INTERVAL 1 DAY), INTERVAL ? HOUR)) AS agendadas
+         FROM Cita
+        WHERE fecha_hora_inicio >= ? AND fecha_hora_inicio < ?
+          AND estado NOT IN ('cancelada', 'no_asistio')
+        GROUP BY fecha, hora`,
+      [horaCorte, desde, hasta]);
+  }
+
   async upsertPrediccion({ fecha, turno, lavados, necesarios, metodo }) {
     await database.query(
       `INSERT INTO PrediccionDemanda (fecha, turno, lavados_estimados, trabajadores_necesarios, metodo, actualizado)

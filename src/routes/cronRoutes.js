@@ -5,10 +5,11 @@
 import { Router } from "express";
 import SugerenciaService from "../services/SugerenciaService.js";
 import ClimaService from "../services/ClimaService.js";
+import ModeloService from "../services/ModeloService.js";
 import CronController from "../controllers/CronController.js";
 
 const router = Router();
-const controller = new CronController(new SugerenciaService(), new ClimaService());
+const controller = new CronController(new SugerenciaService(), new ClimaService(), new ModeloService());
 
 router.get("/sugerencias", controller.autenticar, controller.sugerencias);
 

@@ -57,6 +57,7 @@ export default class PanelService {
           probLluvia: pred.turnos[turno].probLluvia,
           lavadosEstimados: pred.turnos[turno].lavadosEstimados,
           necesarios: pred.turnos[turno].necesarios,
+          metodo: pred.turnos[turno].metodo, // "reglas-v1" o "modelo-v1" (Fase 13)
           programados: programados.filter((t) => turnosQueCubre(t.turno).includes(turno)).length,
         })),
       };

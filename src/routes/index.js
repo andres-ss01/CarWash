@@ -17,6 +17,7 @@ import cronogramaRoutes from "./cronogramaRoutes.js";
 import sugerenciaRoutes from "./sugerenciaRoutes.js";
 import panelRoutes from "./panelRoutes.js";
 import cronRoutes from "./cronRoutes.js";
+import modeloRoutes from "./modeloRoutes.js";
 
 const router = Router();
 
@@ -33,6 +34,7 @@ router.use("/notificaciones", notificacionRoutes); // -> /api/notificaciones
 router.use("/cronograma", cronogramaRoutes);       // -> /api/cronograma
 router.use("/sugerencias", sugerenciaRoutes);      // -> /api/sugerencias
 router.use("/panel", panelRoutes);                 // -> /api/panel
+router.use("/modelo", modeloRoutes);               // -> /api/modelo (Fase 13, admin)
 router.use("/cron", cronRoutes);                   // -> /api/cron (solo con CRON_SECRET)
 
 export default router;

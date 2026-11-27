@@ -36,6 +36,7 @@ function crearServicio({ estado = trabajadores(), probMatutino = 85, probVespert
   s.model.bloquearFecha = async () => {};
   s.notificacionModel.create = async (idUsuario, idOrden, mensaje) => log.notificaciones.push({ idUsuario, mensaje });
   s.usuarioModel.findAll = async () => [{ id: 99 }]; // un administrador
+  s.modeloService.obtenerActivo = async () => null; // Fase 13: sin modelo entrenado, se usan las reglas
   return { s, log };
 }
 
