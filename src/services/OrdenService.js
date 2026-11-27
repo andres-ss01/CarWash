@@ -14,7 +14,7 @@ import Usuario from "../models/Usuario.js";
 import Notificacion from "../models/Notificacion.js";
 import AppError from "../utils/AppError.js";
 import { ROLES, exigirDuenoOStaff, esStaff } from "../utils/permisos.js";
-import { parseId, parseListOptions } from "../utils/validators.js";
+import { parseId, parseListOptions, redondear } from "../utils/validators.js";
 
 export default class OrdenService {
   constructor() {
@@ -90,6 +90,20 @@ export default class OrdenService {
       const siguiente = estados.find((e) => e.paso > orden.estado.paso);
       if (!siguiente) throw new AppError("La orden ya llegó a su último estado", 409);
       const esUltimo = siguiente.paso === estados[estados.length - 1].paso;
+
+      // No se puede terminar sin cobrar: antes del último paso debe estar registrado el pago del total
+      // (efectivo ya pagado, o tarjeta/transferencia registrada aunque falte confirmarla).
+      if (esUltimo) {
+        const [{ cobrado }] = await database.query(
+          "SELECT COALESCE(SUM(monto), 0) AS cobrado FROM Pago WHERE idOrden = ? AND estado IN ('pagado', 'pendiente')",
+          [orden.id], conn);
+        const falta = redondear(orden.total - Number(cobrado));
+        if (falta > 0) {
+          throw new AppError(
+            `Primero cobra la orden: faltan $${falta.toFixed(2)} de $${Number(orden.total).toFixed(2)}. ` +
+            "Registra el pago y después termínala.", 409);
+        }
+      }
 
       await this.model.cambiarEstado(orden.id, siguiente.id, esUltimo, conn);
       await this.model.addHistorial(orden.id, siguiente.id, actor.id, conn);

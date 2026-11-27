@@ -18,6 +18,8 @@ import sugerenciaRoutes from "./sugerenciaRoutes.js";
 import panelRoutes from "./panelRoutes.js";
 import cronRoutes from "./cronRoutes.js";
 import modeloRoutes from "./modeloRoutes.js";
+import nominaRoutes from "./nominaRoutes.js";
+import contenidoRoutes from "./contenidoRoutes.js";
 
 const router = Router();
 
@@ -35,6 +37,8 @@ router.use("/cronograma", cronogramaRoutes);       // -> /api/cronograma
 router.use("/sugerencias", sugerenciaRoutes);      // -> /api/sugerencias
 router.use("/panel", panelRoutes);                 // -> /api/panel
 router.use("/modelo", modeloRoutes);               // -> /api/modelo (Fase 13, admin)
+router.use("/nomina", nominaRoutes);               // -> /api/nomina (pago por día y semanas)
+router.use("/contenido", contenidoRoutes);         // -> /api/contenido ("Sobre nosotros")
 router.use("/cron", cronRoutes);                   // -> /api/cron (solo con CRON_SECRET)
 
 export default router;

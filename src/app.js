@@ -59,6 +59,8 @@ export function createApp() {
         sugerencias: "/api/sugerencias",
         panel: "/api/panel",
         modelo: "/api/modelo",
+        nomina: "/api/nomina",
+        contenido: "/api/contenido",
       },
     });
   });
