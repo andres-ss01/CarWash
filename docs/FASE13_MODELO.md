@@ -80,7 +80,29 @@ que las reglas (`test/modelo.test.js`). Con datos reales el número saldrá en `
 | `MODELO_DIAS_REENTRENAR` | `7` | Cada cuántos días reentrena el cron |
 | `MODELO_HORA_CORTE` | `18` | Hora de la víspera en que se “congelan” las citas agendadas |
 
-## 6. Ideas para seguir mejorando
+## 6. Demostración con historial simulado (base de pruebas)
+
+Con pocas citas reales el modelo no se activa (a propósito). Para demostrarlo sin esperar meses,
+`scripts/simular_historial.js` llena una **base de pruebas aparte** con semanas de citas y clima
+simulados, con efectos conocidos (lluvia −, quincena +, festivo −, tarde +), y entrena el modelo.
+
+1. En TiDB Cloud (SQL Editor del clúster) o en Workbench conectado a TiDB: `CREATE DATABASE carwash_pruebas;`
+2. Crea `.env.pruebas` (Git lo ignora) con los mismos datos de conexión que en Vercel
+   (host `gateway01…tidbcloud.com`, puerto 4000, usuario `xxxx.root`), pero
+   `DB_NAME=carwash_pruebas` y `DB_SSL=true` sin `DB_SSL_CA` (TiDB usa un certificado público).
+3. Crea las tablas en esa base (el seed **borra y recrea**: revisa que `DB_NAME` sea la de pruebas):
+   `$env:DOTENV_CONFIG_PATH=".env.pruebas"; npm run seed`
+4. Simula y entrena:
+   `npm run simular -- --env .env.pruebas --confirmar carwash_pruebas --semanas 16`
+5. Para quitar lo simulado: el mismo comando con `--borrar`.
+
+El script imprime el error del modelo contra el de las reglas, si quedó activo y lo que aprendió,
+junto a los efectos programados, para compararlos. Candados: exige `--env` y `--confirmar` con el
+nombre exacto de la base, solo corre en bases cuyo nombre contenga "prueba" y se detiene si la base
+ya tiene citas reales.
+`npm test` (test/simulacion.test.js) comprueba lo mismo sin base de datos.
+
+## 7. Ideas para seguir mejorando
 
 - **Personal por nivel de servicio:** en vez de cubrir el promedio, cubrir el percentil 80 de la Poisson
   para no quedarse cortos los días buenos.
